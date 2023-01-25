@@ -5,7 +5,6 @@
 #include "Table.h"
 #include "Structures.h"
 
-
 int main()
 {
     /*

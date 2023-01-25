@@ -79,7 +79,6 @@ template <typename Type> class Table
 
             do
             {
-
                 vecPlainByteBlock.clear();
                 vecPlainByteBlock.resize(64);
 
@@ -88,7 +87,6 @@ template <typename Type> class Table
 
                 do
                 {
-
                     uint8_t byInput = vecOutputBuffer[iInputIndex++];
 
                     vecPlainByteBlock[iIndex] = (uint8_t)((byInput >> 7) & 1);
@@ -105,7 +103,8 @@ template <typename Type> class Table
 
                     iIndex = iPlainByteIndex + 1;
 
-                } while (iCounter1-- != 1);
+                    iCounter1--;
+                } while (iCounter1 > 0);
 
                 InitialDecode(vecPlainByteBlock, 0);
 
@@ -113,11 +112,9 @@ template <typename Type> class Table
 
                 do
                 {
-
                     uint8_t byProcessedByte = (uint8_t)(vecPlainByteBlock[iCounter2 + 7] | (2 * (vecPlainByteBlock[iCounter2 + 6] | (2 * (vecPlainByteBlock[iCounter2 + 5] | (2 * (vecPlainByteBlock[iCounter2 + 4] | (2 * (vecPlainByteBlock[iCounter2 + 3] | (2 * (vecPlainByteBlock[iCounter2 + 2] | (2 * (vecPlainByteBlock[iCounter2 + 1] | (2 * vecPlainByteBlock[iCounter2]))))))))))))));
-                    vecOutputBuffer[iOutputIndex++] = byProcessedByte;
                     iCounter2 += 8;
-
+                    vecOutputBuffer[iOutputIndex++] = byProcessedByte;
                 } while (iCounter2 < 64);
 
             } while (iMainCounter-- != 1);
@@ -273,12 +270,10 @@ template <typename Type> class Table
 
             do
             {
-
                 int32_t iInputIndex = 0;
 
                 do
                 {
-
                     int32_t iStartIndex = iStartIndex1;
 
                     if (p2 == 0)
@@ -286,7 +281,6 @@ template <typename Type> class Table
 
                     byBuffer[iInputIndex] = (uint8_t)(byKey[(48 * iStartIndex) + iInputIndex] ^ vecPlainByteblock[byExpansionOperationMatrix[iInputIndex] + 31]);
                     iInputIndex++;
-
                 } while (iInputIndex < 48);
 
                 iNumArray[0] = iNumArray1[byBuffer[4] | (2 * (byBuffer[3] | (2 * (byBuffer[2] | (2 * (byBuffer[1] | (2 * (byBuffer[5] | (2 * byBuffer[0])))))))))];
@@ -314,7 +308,6 @@ template <typename Type> class Table
 
                 if (iStartIndex2 <= 0)
                 {
-
                     do
                     {
                         uint8_t byInput = (uint8_t)(vecPlainByteblock[iInputIndex] ^ destinationArray[byPermutation[iInputIndex] - 1]);
@@ -322,15 +315,13 @@ template <typename Type> class Table
                         vecPlainByteblock[iInputIndex] = byInput;
 
                         iInputIndex++;
-
-                    } while (iCounter-- > -1);
+                        iCounter--;
+                    } while (iCounter > 0);
                 }
                 else
                 {
-
                     do
                     {
-
                         uint8_t byInput1 = vecPlainByteblock[iInputIndex + 32];
                         uint8_t byInput2 = (uint8_t)(vecPlainByteblock[iInputIndex] ^ destinationArray[byPermutation[iInputIndex] - 1]);
 
@@ -338,13 +329,13 @@ template <typename Type> class Table
                         vecPlainByteblock[iInputIndex + 32] = byInput2;
 
                         iInputIndex++;
-
-                    } while (iCounter-- > -1);
+                        iCounter--;
+                    } while (iCounter > 0);
                 }
 
+                iStartIndex2--;
                 iStartIndex1++;
-
-            } while (iStartIndex2-- > 0);
+            } while (iStartIndex2 > -1);
         }
 
         bool ReadTable(std::vector<uint8_t> vecBuffer)
@@ -388,61 +379,61 @@ template <typename Type> class Table
                 {
                     switch (m_DataType[j])
                     {
-                        case DT_CHAR:
-                            *(int8_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int8_t>();
-                            break;
-
-                        case DT_BYTE:
-                            *(uint8_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint8_t>();
-                            break;
-
-                        case DT_SHORT:
-                            *(int16_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int16_t>();
-                            break;
-
-                        case DT_WORD:
-                            *(uint16_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint16_t>();
-                            break;
-
-                        case DT_INT:
-                            *(int32_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int32_t>();
-                            break;
-
-                        case DT_DWORD:
-                            *(uint32_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint32_t>();
-                            break;
-
-                        case DT_STRING:
-                        {
-                            int32_t iStringLen = buffer.read<int32_t>();
-                            std::string strValue = "";
-
-                            if (iStringLen > 0)
-                                buffer.readString(strValue, iStringLen);
-
-                            *(std::string*)((char*)(&Data) + vecOffsets[j]) = strValue;
-                        }
+                    case DT_CHAR:
+                        *(int8_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int8_t>();
                         break;
 
-                        case DT_FLOAT:
-                            *(float*)((char*)(&Data) + vecOffsets[j]) = buffer.read<float>();
-                            break;
+                    case DT_BYTE:
+                        *(uint8_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint8_t>();
+                        break;
 
-                        case DT_DOUBLE:
-                            *(double*)((char*)(&Data) + vecOffsets[j]) = buffer.read<double>();
-                            break;
+                    case DT_SHORT:
+                        *(int16_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int16_t>();
+                        break;
 
-                        case DT_LONG:
-                            *(int64_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int64_t>();
-                            break;
+                    case DT_WORD:
+                        *(uint16_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint16_t>();
+                        break;
 
-                        case DT_ULONG:
-                            *(uint64_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint64_t>();
-                            break;
+                    case DT_INT:
+                        *(int32_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int32_t>();
+                        break;
 
-                        case DT_NONE:
-                        default:
-                            break;
+                    case DT_DWORD:
+                        *(uint32_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint32_t>();
+                        break;
+
+                    case DT_STRING:
+                    {
+                        int32_t iStringLen = buffer.read<int32_t>();
+                        std::string strValue = "";
+
+                        if (iStringLen > 0)
+                            buffer.readString(strValue, iStringLen);
+
+                        *(std::string*)((char*)(&Data) + vecOffsets[j]) = strValue;
+                    }
+                    break;
+
+                    case DT_FLOAT:
+                        *(float*)((char*)(&Data) + vecOffsets[j]) = buffer.read<float>();
+                        break;
+
+                    case DT_DOUBLE:
+                        *(double*)((char*)(&Data) + vecOffsets[j]) = buffer.read<double>();
+                        break;
+
+                    case DT_LONG:
+                        *(int64_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<int64_t>();
+                        break;
+
+                    case DT_ULONG:
+                        *(uint64_t*)((char*)(&Data) + vecOffsets[j]) = buffer.read<uint64_t>();
+                        break;
+
+                    case DT_NONE:
+                    default:
+                        break;
                     }
                 }
 
