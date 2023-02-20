@@ -77,7 +77,7 @@ template <typename Type> class Table
 
             int32_t iMainCounter = (iLength + 7) >> 3;
 
-            do
+            while (iMainCounter-- != 1)
             {
                 vecPlainByteBlock.clear();
                 vecPlainByteBlock.resize(64);
@@ -85,7 +85,7 @@ template <typename Type> class Table
                 int32_t iIndex = 0;
                 int32_t iCounter1 = 8;
 
-                do
+                while (iCounter1 > 0)
                 {
                     uint8_t byInput = vecOutputBuffer[iInputIndex++];
 
@@ -104,20 +104,20 @@ template <typename Type> class Table
                     iIndex = iPlainByteIndex + 1;
 
                     iCounter1--;
-                } while (iCounter1 > 0);
+                } ;
 
                 InitialDecode(vecPlainByteBlock, 0);
 
                 int32_t iCounter2 = 0;
 
-                do
+                while (iCounter2 < 64)
                 {
                     uint8_t byProcessedByte = (uint8_t)(vecPlainByteBlock[iCounter2 + 7] | (2 * (vecPlainByteBlock[iCounter2 + 6] | (2 * (vecPlainByteBlock[iCounter2 + 5] | (2 * (vecPlainByteBlock[iCounter2 + 4] | (2 * (vecPlainByteBlock[iCounter2 + 3] | (2 * (vecPlainByteBlock[iCounter2 + 2] | (2 * (vecPlainByteBlock[iCounter2 + 1] | (2 * vecPlainByteBlock[iCounter2]))))))))))))));
                     iCounter2 += 8;
                     vecOutputBuffer[iOutputIndex++] = byProcessedByte;
-                } while (iCounter2 < 64);
+                } ;
 
-            } while (iMainCounter-- != 1);
+            } ;
 
             uint16_t sVolatileKey = 0x0418;
             uint16_t sCipherKey1 = 0x8041;
@@ -268,11 +268,11 @@ template <typename Type> class Table
                 19, 13, 30, 6, 22, 11, 4, 25
             };
 
-            do
+            while (iStartIndex2 > -1)
             {
                 int32_t iInputIndex = 0;
 
-                do
+                while (iInputIndex < 48)
                 {
                     int32_t iStartIndex = iStartIndex1;
 
@@ -281,7 +281,7 @@ template <typename Type> class Table
 
                     byBuffer[iInputIndex] = (uint8_t)(byKey[(48 * iStartIndex) + iInputIndex] ^ vecPlainByteblock[byExpansionOperationMatrix[iInputIndex] + 31]);
                     iInputIndex++;
-                } while (iInputIndex < 48);
+                } ;
 
                 iNumArray[0] = iNumArray1[byBuffer[4] | (2 * (byBuffer[3] | (2 * (byBuffer[2] | (2 * (byBuffer[1] | (2 * (byBuffer[5] | (2 * byBuffer[0])))))))))];
                 iNumArray[1] = iNumArray2[byBuffer[10] | (2 * (byBuffer[9] | (2 * (byBuffer[8] | (2 * (byBuffer[7] | (2 * (byBuffer[11] | (2 * byBuffer[6])))))))))];
@@ -308,7 +308,7 @@ template <typename Type> class Table
 
                 if (iStartIndex2 <= 0)
                 {
-                    do
+                    while (iCounter > 0)
                     {
                         uint8_t byInput = (uint8_t)(vecPlainByteblock[iInputIndex] ^ destinationArray[byPermutation[iInputIndex] - 1]);
 
@@ -316,11 +316,11 @@ template <typename Type> class Table
 
                         iInputIndex++;
                         iCounter--;
-                    } while (iCounter > 0);
+                    } ;
                 }
                 else
                 {
-                    do
+                    while (iCounter > 0)
                     {
                         uint8_t byInput1 = vecPlainByteblock[iInputIndex + 32];
                         uint8_t byInput2 = (uint8_t)(vecPlainByteblock[iInputIndex] ^ destinationArray[byPermutation[iInputIndex] - 1]);
@@ -330,12 +330,12 @@ template <typename Type> class Table
 
                         iInputIndex++;
                         iCounter--;
-                    } while (iCounter > 0);
+                    } ;
                 }
 
                 iStartIndex2--;
                 iStartIndex1++;
-            } while (iStartIndex2 > -1);
+            } ;
         }
 
         bool ReadTable(std::vector<uint8_t> vecBuffer)
