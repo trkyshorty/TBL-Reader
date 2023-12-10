@@ -1,6 +1,7 @@
 #pragma once
-#include "Windows.h"
+
 #include "ByteBuffer.h"
+
 #include <fstream>
 #include <type_traits>
 #include <vector>
@@ -12,7 +13,12 @@ template<typename... Type> struct is_std_vector<std::vector<Type...>> final : st
 template <typename Type> class Table
 {
 public:
-    Table() { }
+    Table()
+    {
+        m_DataType.clear();
+        m_Data.clear();
+    }
+
     virtual ~Table()
     {
         Release();
@@ -51,6 +57,7 @@ public:
     }
 
     std::map<uint32_t, Type> GetData() { return m_Data; }
+
     size_t GetDataSize() { return m_Data.size(); }
     size_t GetColumnSize() { return m_DataType.size(); }
 
@@ -131,69 +138,72 @@ protected:
 
     void InitialDecode(std::vector<uint8_t>& vecPlainByteblock, int p2)
     {
-        int32_t iStartIndex1 = 0;
-        int32_t iStartIndex2 = 15;
-
-        int32_t* iNumArray = new int32_t[8];
-        uint8_t* byBuffer = new uint8_t[48];
-
-        int32_t iNumArray1[] = {
+        int32_t iNumArray1[] =
+        {
             0x10101, 0x100, 0x1000101, 0x1000000, 0x10000, 0x1010101, 0x1010001, 1, 0x1010000, 0x10001, 0x10100, 0x101, 0x1000100, 0x1000001, 0, 0x1010100,
             0, 0x1010101, 0x1010100, 0x100, 0x10101, 0x10000, 0x1000101, 0x1000000, 0x10001, 0x10100, 0x101, 0x1010001, 0x1000001, 0x1000100, 0x1010000, 1,
             0x100, 0x1000000, 0x10101, 1, 0x1000101, 0x10100, 0x10000, 0x1010001, 0x1010101, 0x101, 0x1000001, 0x1010100, 0x1010000, 0x10001, 0x1000100, 0,
             0x1010101, 0x101, 1, 0x10000, 0x100, 0x1000001, 0x1000000, 0x1010100, 0x1000100, 0x1010001, 0x1010000, 0x10101, 0x10001, 0, 0x10100, 0x1000101
         };
 
-        int32_t iNumArray2[] = {
+        int32_t iNumArray2[] =
+        {
             0x1010101, 0x1000000, 1, 0x10101, 0x10100, 0x1010001, 0x1010000, 0x100, 0x1000001, 0x1010100, 0x10000, 0x1000101, 0x101, 0, 0x1000100, 0x10001,
             0x1010000, 0x1000101, 0x100, 0x1010100, 0x1010101, 0x10000, 1, 0x10101, 0x101, 0, 0x1000000, 0x10001, 0x10100, 0x1000001, 0x1010001, 0x1000100,
             0, 0x10101, 0x1010100, 0x1010001, 0x10001, 0x100, 0x1000101, 0x1000000, 0x1000100, 1, 0x101, 0x10100, 0x1000001, 0x1010000, 0x10000, 0x1010101,
             0x1000101, 1, 0x10001, 0x1000000, 0x1010000, 0x1010101, 0x100, 0x10000, 0x1010001, 0x10100, 0x1010100, 0x101, 0, 0x1000100, 0x10101, 0x1000001
         };
 
-        int32_t iNumArray3[] = {
+        int32_t iNumArray3[] =
+        {
             0x10001, 0, 0x1000001, 0x10101, 0x10100, 0x1010000, 0x1010101, 0x1000100, 0x1000000, 0x1000101, 0x101, 0x1010100, 0x1010001, 0x100, 0x10000, 1,
             0x1000101, 0x1010100, 0, 0x1000001, 0x1010000, 0x100, 0x10100, 0x10001, 0x10000, 1, 0x1000100, 0x10101, 0x101, 0x1010001, 0x1010101, 0x1000000,
             0x1000101, 0x10100, 0x100, 0x1000001, 1, 0x1010101, 0x1010000, 0, 0x1010001, 0x1000000, 0x10000, 0x101, 0x1000100, 0x10001, 0x10101, 0x1010100,
             0x1000000, 0x10001, 0x1000101, 0, 0x10100, 0x1000001, 1, 0x1010100, 0x100, 0x1010101, 0x10101, 0x1010000, 0x1010001, 0x1000100, 0x10000, 0x101
         };
 
-        int32_t iNumArray4[] = {
+        int32_t iNumArray4[] =
+        {
             0x1010100, 0x1000101, 0x10101, 0x1010000, 0, 0x10100, 0x1000001, 0x10001, 0x1000000, 0x10000, 1, 0x1000100, 0x1010001, 0x101, 0x100, 0x1010101,
             0x1000101, 1, 0x1010001, 0x1000100, 0x10100, 0x1010101, 0, 0x1010000, 0x100, 0x1010100, 0x10000, 0x101, 0x1000000, 0x10001, 0x10101, 0x1000001,
             0x10001, 0x10100, 0x1000001, 0, 0x101, 0x1010001, 0x1010100, 0x1000101, 0x1010101, 0x1000000, 0x1010000, 0x10101, 0x1000100, 0x10000, 1, 0x100,
             0x1010000, 0x1010101, 0, 0x10100, 0x10001, 0x1000000, 0x1000101, 1, 0x1000001, 0x100, 0x1000100, 0x1010001, 0x101, 0x1010100, 0x10000, 0x10101
         };
 
-        int32_t iNumArray5[] = {
+        int32_t iNumArray5[] =
+        {
             0x10000, 0x101, 0x100, 0x1000000, 0x1010100, 0x10001, 0x1010001, 0x10100, 1, 0x1000100, 0x1010000, 0x1010101, 0x1000101, 0, 0x10101, 0x1000001,
             0x10101, 0x1010001, 0x10000, 0x101, 0x100, 0x1010100, 0x1000101, 0x1000000, 0x1000100, 0, 0x1010101, 0x10001, 0x1010000, 0x1000001, 1, 0x10100,
             0x100, 0x10000, 0x1000000, 0x1010001, 0x10001, 0x1000101, 0x1010100, 1, 0x1010101, 0x1000001, 0x101, 0x1000100, 0x10100, 0x1010000, 0, 0x10101,
             0x1010001, 1, 0x101, 0x1010100, 0x1000000, 0x10101, 0x10000, 0x1000101, 0x10100, 0x1010101, 0, 0x1000001, 0x10001, 0x100, 0x1000100, 0x1010000
         };
 
-        int32_t iNumArray6[] = {
+        int32_t iNumArray6[] =
+        {
             0x101, 0x1000000, 0x10001, 0x1010101, 0x1000001, 0x10000, 0x10100, 1, 0, 0x1000101, 0x1010000, 0x100, 0x10101, 0x1010100, 0x1000100, 0x1010001,
             0x10001, 0x1010101, 0x100, 0x10000, 0x1010100, 0x101, 0x1000001, 0x1000100, 0x10100, 0x1000000, 0x1000101, 0x10101, 0, 0x1010001, 0x1010000, 1,
             0x1000001, 0x10101, 0x1010101, 0x1000100, 0x10000, 1, 0x101, 0x1010000, 0x1010100, 0, 0x100, 0x10001, 0x1000000, 0x1000101, 0x1010001, 0x10100,
             0x100, 0x1010000, 0x10000, 0x101, 0x1000001, 0x1000100, 0x1010101, 0x10001, 0x1010001, 0x10101, 0x1000000, 0x1010100, 0x10100, 0, 1, 0x1000101
         };
 
-        int32_t iNumArray7[] = {
+        int32_t iNumArray7[] =
+        {
             0x100, 0x1010001, 0x10000, 0x10101, 0x1010101, 0, 1, 0x1000101, 0x1010000, 0x101, 0x1000001, 0x1010100, 0x1000100, 0x10001, 0x10100, 0x1000000,
             0x1000101, 0, 0x1010001, 0x1010100, 0x100, 0x1000001, 0x1000000, 0x10001, 0x10101, 0x1010000, 0x1000100, 0x101, 0x10000, 0x1010101, 1, 0x10100,
             0x1000000, 0x100, 0x1010001, 0x1000101, 0x101, 0x1010000, 0x1010100, 0x10101, 0x10001, 0x1010101, 0x10100, 1, 0, 0x1000100, 0x1000001, 0x10000,
             0x10100, 0x1010001, 0x1000101, 1, 0x1000000, 0x100, 0x10001, 0x1010100, 0x1000001, 0x1000100, 0, 0x1010101, 0x10101, 0x10000, 0x1010000, 0x101
         };
 
-        int32_t iNumArray8[] = {
+        int32_t iNumArray8[] =
+        {
             0x1000101, 0x10000, 1, 0x100, 0x10100, 0x1010101, 0x1010001, 0x1000000, 0x10001, 0x1000001, 0x1010000, 0x10101, 0x1000100, 0, 0x101, 0x1010100,
             0x1000000, 0x1010101, 0x1000101, 1, 0x10001, 0x1010000, 0x1010100, 0x100, 0x101, 0x1000100, 0x10100, 0x1010001, 0, 0x10101, 0x1000001, 0x10000,
             0x1010100, 0x1010001, 0x100, 0x1000000, 0x1000001, 0x101, 0x10101, 0x10000, 0, 0x10100, 0x10001, 0x1000101, 0x1010101, 0x1010000, 0x1000100, 1,
             0x10000, 0x1000000, 0x10101, 0x1010100, 0x100, 0x10001, 1, 0x1000101, 0x1010101, 0x101, 0x1000001, 0, 0x1010000, 0x1000100, 0x10100, 0x1010001
         };
 
-        BYTE byKey[] = {
+        BYTE byKey[] =
+        {
             0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1,
             1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1,
             1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1,
@@ -264,34 +274,31 @@ protected:
             19, 13, 30, 6, 22, 11, 4, 25
         };
 
+        int32_t iStartIndex1 = 0;
+        int32_t iStartIndex2 = 15;
+
+        std::vector<int32_t> iNumArray(8);
+        std::vector<uint8_t> byBuffer(48);
+        std::vector<uint8_t> destinationArray(32);
+
+        int32_t* iNumArraySet[] = { iNumArray1, iNumArray2, iNumArray3, iNumArray4, iNumArray5, iNumArray6, iNumArray7, iNumArray8 };
+
         while (iStartIndex2 > -1)
         {
             int32_t iInputIndex = 0;
 
             while (iInputIndex < 48)
             {
-                int32_t iStartIndex = iStartIndex1;
-
-                if (p2 == 0)
-                    iStartIndex = iStartIndex2;
+                int32_t iStartIndex = (p2 == 0) ? iStartIndex2 : iStartIndex1;
 
                 byBuffer[iInputIndex] = (uint8_t)(byKey[(48 * iStartIndex) + iInputIndex] ^ vecPlainByteblock[byExpansionOperationMatrix[iInputIndex] + 31]);
                 iInputIndex++;
-            };
-
-            iNumArray[0] = iNumArray1[byBuffer[4] | (2 * (byBuffer[3] | (2 * (byBuffer[2] | (2 * (byBuffer[1] | (2 * (byBuffer[5] | (2 * byBuffer[0])))))))))];
-            iNumArray[1] = iNumArray2[byBuffer[10] | (2 * (byBuffer[9] | (2 * (byBuffer[8] | (2 * (byBuffer[7] | (2 * (byBuffer[11] | (2 * byBuffer[6])))))))))];
-            iNumArray[2] = iNumArray3[byBuffer[16] | (2 * (byBuffer[15] | (2 * (byBuffer[14] | (2 * (byBuffer[13] | (2 * (byBuffer[17] | (2 * byBuffer[12])))))))))];
-            iNumArray[3] = iNumArray4[byBuffer[22] | (2 * (byBuffer[21] | (2 * (byBuffer[20] | (2 * (byBuffer[19] | (2 * (byBuffer[23] | (2 * byBuffer[18])))))))))];
-            iNumArray[4] = iNumArray5[byBuffer[28] | (2 * (byBuffer[27] | (2 * (byBuffer[26] | (2 * (byBuffer[25] | (2 * (byBuffer[29] | (2 * byBuffer[24])))))))))];
-            iNumArray[5] = iNumArray6[byBuffer[34] | (2 * (byBuffer[33] | (2 * (byBuffer[32] | (2 * (byBuffer[31] | (2 * (byBuffer[35] | (2 * byBuffer[30])))))))))];
-            iNumArray[6] = iNumArray7[byBuffer[40] | (2 * (byBuffer[39] | (2 * (byBuffer[38] | (2 * (byBuffer[37] | (2 * (byBuffer[41] | (2 * byBuffer[36])))))))))];
-            iNumArray[7] = iNumArray8[byBuffer[46] | (2 * (byBuffer[45] | (2 * (byBuffer[44] | (2 * (byBuffer[43] | (2 * (byBuffer[47] | (2 * byBuffer[42])))))))))];
-
-            std::vector<uint8_t> destinationArray(32);
+            }
 
             for (size_t i = 0; i < 8; i++)
             {
+                int index = i * 6;
+                iNumArray[i] = iNumArraySet[i][byBuffer[index + 4] | (2 * (byBuffer[index + 3] | (2 * (byBuffer[index + 2] | (2 * (byBuffer[index + 1] | (2 * (byBuffer[index + 5] | (2 * byBuffer[index])))))))))];
                 uint8_t* byBytePointer = reinterpret_cast<uint8_t*>(&iNumArray[i]);
                 std::memcpy(&destinationArray[i * 4], byBytePointer, sizeof(iNumArray[i]));
             }
@@ -299,17 +306,13 @@ protected:
             iInputIndex = 0;
             int32_t iCounter = 32;
 
-            if (iStartIndex2 <= 0)
+            for (int i = 0; i < iCounter; i++)
             {
-                for (int i = iCounter; i > 0; i--)
+                if (iStartIndex2 <= 0)
                 {
                     vecPlainByteblock[iInputIndex] ^= destinationArray[byPermutation[iInputIndex] - 1];
-                    iInputIndex++;
                 }
-            }
-            else
-            {
-                for (int i = 0; i < 32; i++)
+                else
                 {
                     uint8_t byInput1 = vecPlainByteblock[i + 32];
                     uint8_t byInput2 = vecPlainByteblock[i] ^ destinationArray[byPermutation[i] - 1];
@@ -317,14 +320,16 @@ protected:
                     vecPlainByteblock[i] = byInput1;
                     vecPlainByteblock[i + 32] = byInput2;
                 }
+
+                iInputIndex++;
             }
 
             iStartIndex2--;
             iStartIndex1++;
-        };
+        }
     }
 
-    bool ReadTable(std::vector<uint8_t> vecBuffer)
+    bool ReadTable(std::vector<uint8_t>& vecBuffer)
     {
         ByteBuffer buffer;
         buffer.append(vecBuffer.data(), vecBuffer.size());
@@ -346,14 +351,13 @@ protected:
             return false;
         }
 
-        int iSize = vecOffsets[iColumnCount];
-
-        if (sizeof(Type) != iSize ||
-            DT_DWORD != m_DataType[0])
-        {
-            m_DataType.clear();
-            return false;
-        }
+        //int iSize = vecOffsets[iColumnCount];
+        //if (sizeof(Type) != iSize ||
+        //    DT_DWORD != m_DataType[0])
+        //{
+        //    m_DataType.clear();
+        //    return false;
+        //}
 
         size_t iRowCount = buffer.read<int32_t>();
 
