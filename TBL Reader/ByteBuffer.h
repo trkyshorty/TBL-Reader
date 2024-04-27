@@ -1,10 +1,11 @@
 #pragma once
 
+#include <Windows.h>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <vector>
 #include <cassert>
-#include <string>
-#include <iomanip>
-#include <sstream>
 
 class ByteBuffer
 {
@@ -40,6 +41,7 @@ public:
 	ByteBuffer& operator<<(int16_t value) { append<int16_t>(value); return *this; }
 	ByteBuffer& operator<<(int32_t value) { append<int32_t>(value); return *this; }
 	ByteBuffer& operator<<(int64_t value) { append<int64_t>(value); return *this; }
+	ByteBuffer& operator<<(unsigned long value) { append<unsigned long>(value); return *this; }
 	ByteBuffer& operator<<(float value) { append<float>(value); return *this; }
 
 	ByteBuffer& operator<<(ByteBuffer& value)
@@ -61,6 +63,7 @@ public:
 	ByteBuffer& operator>>(int16_t& value) { value = read<int16_t>(); return *this; }
 	ByteBuffer& operator>>(int32_t& value) { value = read<int32_t>(); return *this; }
 	ByteBuffer& operator>>(int64_t& value) { value = read<int64_t>(); return *this; }
+	ByteBuffer& operator>>(unsigned long& value) { value = read<unsigned long>(); return *this; }
 	ByteBuffer& operator>>(float& value) { value = read<float>(); return *this; }
 
 	// Hacky KO string flag - either it's a single byte length, or a double byte.
@@ -71,30 +74,36 @@ public:
 	ByteBuffer& operator<<(std::string& value) { *this << value.c_str(); return *this; }
 	ByteBuffer& operator<<(const char* str)
 	{
-		uint16_t len = (uint16_t)strlen(str);
+		size_t len = strlen(str);
+
 		if (m_doubleByte)
-			append((uint8_t*)&len, 2);
+			append((uint8_t*)&len, sizeof(uint16_t));
 		else
-			append((uint8_t*)&len, 1);
+			append((uint8_t*)&len, sizeof(uint8_t));
+
 		append((uint8_t*)str, len);
 		return *this;
 	}
 	ByteBuffer& operator<<(char* str) { *this << (const char*)str; return *this; }
 
-	ByteBuffer& operator>>(std::string& value)
+	ByteBuffer& operator>>(std::string& dest)
 	{
+		dest.clear();
+
 		uint16_t len;
-		value.clear();
+
 		if (m_doubleByte)
 			len = read<uint16_t>();
 		else
 			len = read<uint8_t>();
 
-		if (_rpos + len <= size())
+		if (len > 0 && _rpos + len <= size())
 		{
-			for (uint16_t i = 0; i < len; i++)
-				value.push_back(read<char>());
+			dest.resize(len);
+			dest.assign(len, '\0');
+			read(&dest[0], len);
 		}
+
 		return *this;
 	}
 
@@ -131,19 +140,37 @@ public:
 
 	void readString(std::string& dest)
 	{
-		readString(dest, m_doubleByte);
+		dest.clear();
+
+		uint16_t len;
+
+		if (m_doubleByte)
+			len = read<uint16_t>();
+		else
+			len = read<uint8_t>();
+
+		if (len > 0 && _rpos + len <= size())
+		{
+			dest.resize(len);
+			dest.assign(len, '\0');
+			read(&dest[0], len);
+		}
 	}
 
 	void readString(std::string& dest, size_t len)
 	{
 		dest.clear();
-		dest.assign(len, '\0');
 
-		if (_rpos + len <= size())
+		if (len > 0 && _rpos + len <= size())
+		{
+			dest.resize(len);
+			dest.assign(len, '\0');
 			read(&dest[0], len);
+		}
 	}
 
-	const uint8_t* contents() const { return &_storage[0]; }
+	uint8_t* contents() { return &_storage[0]; }
+	std::vector<uint8_t> data() { return _storage; }
 	inline size_t size() const { return _storage.size(); }
 
 	// one should never use resize
@@ -174,8 +201,8 @@ public:
 		_wpos += cnt;
 	}
 
-	void append(const ByteBuffer& buffer) { if (buffer.size() > 0) append(buffer.contents(), buffer.size()); }
-	void append(const ByteBuffer& buffer, size_t len)
+	void append(ByteBuffer& buffer) { if (buffer.size() > 0) append(buffer.contents(), buffer.size()); }
+	void append(ByteBuffer& buffer, size_t len)
 	{
 		assert(buffer.rpos() + len <= buffer.size());
 		append(buffer.contents() + buffer.rpos(), len);
